@@ -1,17 +1,14 @@
-#!/bin/bash -l
+#!/bin/bash
+#SBATCH -n 5
+module purge
+module load intel intel-mpi
 
-P=(1 2 4 8 16 32 56)
-points=(4096 5792 8192 11585 16384 23170 30651)
-iteration=50
-num_nodes=1
-count=0
-max=7
 
-echo "Weak scaling"
-for i in ${!P[@]}
-do
-    echo "Running with ${P[$i]} processors and ${points[$i]} points and ${iteration} iterations"
-    srun --nodes 2 -n ${P[$i]} ./poisson ${point[$i]} 50 0 
-    srun --nodes 2 -n ${P[$i]} ./poisson ${point[$i]} 50 1
+for iter in {1..2}; do
+    printf "Starting iteration ${iter}\n"
+    for n in 1 2 4 8 16 32 56; do
+        size=$(echo "scale=0; 4096 * sqrt(${n}.0)" | bc)
+        srun  --reservation=Course-math-454-week -A math-454 -n $n poisson $size 50 $s 0 >> output/weak_scaling_sync.txt &
+        srun  --reservation=Course-math-454-week -A math-454 -n $n poisson $size 50 $s 1 >> output/weak_scaling_async.txt &
+    done
 done
-echo

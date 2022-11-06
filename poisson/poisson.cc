@@ -4,7 +4,6 @@
 #include <chrono>
 #include <iostream>
 #include <sstream>
-#include <fstream>
 #include <tuple>
 #include <chrono>
 /* -------------------------------------------------------------------------- */
@@ -51,15 +50,14 @@ int main(int argc, char *argv[])
     if (arg_0.fail() || arg_1.fail() || arg_2.fail())
       usage(argv[0]);
   }
-  if (prank == 0)
-  {
-    std::cout << "Number of processes: " << psize << ", number of points: " << N << ", number of iterations " << n_iter << std::endl;
-  }
   /// divide the number of rows into psize parts of approximately equal size
-  int rows = (N + psize - 1) / psize;
+  int rows = N / psize;
   /// add  ghost rows depending on where they are needed
   int row_start = std::max(0, prank * rows - 1);
   int row_end = std::min(N - 1, (prank + 1) * rows);
+  // make sure the last process gets all the rows
+  if (prank == psize - 1)
+    row_end = N - 1;
   /// update the number of rows
   rows = row_end - row_start + 1;
 
@@ -83,12 +81,6 @@ int main(int argc, char *argv[])
     std::cout << psize << " " << N << " "
               << k << " " << std::scientific << l2_global << " "
               << time.count() << std::endl;
-    // save results to a file
-    std::ofstream outfile;
-    outfile.open("output/results.txt", std::ios_base::app);
-    outfile << psize << "," << N << ","
-            << k << "," << l2_global << ","
-            << time.count() << "," << use_async << "\n";
   }
 
   MPI_Finalize();
