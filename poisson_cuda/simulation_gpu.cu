@@ -8,23 +8,25 @@
 
 /* -------------------------------------------------------------------------- */
 __global__ void compute_step_one_thread_per_row(
-    Grid uo, Grid u, Grid f, float h) {
+    Grid uo, Grid u, Grid f, float h)
+{
 
     // TODO: implement here the 'per row' version.
-
 }
 
 /* -------------------------------------------------------------------------- */
 __global__ void compute_step_one_thread_per_entry(
-    Grid uo, Grid u, Grid f, float h) {
+    Grid uo, Grid u, Grid f, float h)
+{
 
     // TODO: implement here the 'per entry' version.
 }
 
 /* -------------------------------------------------------------------------- */
-void Simulation::compute_step(const dim3 block_size) {
-    Grid & u = m_grids.current();
-    Grid & uo = m_grids.old();
+void Simulation::compute_step(const dim3 block_size)
+{
+    Grid &u = m_grids.current();
+    Grid &uo = m_grids.old();
 
     int m = u.m();
     int n = u.n();
@@ -32,7 +34,8 @@ void Simulation::compute_step(const dim3 block_size) {
     dim3 grid_size; // TODO: define your grid size
 
     static bool first{true};
-    if (first) {
+    if (first)
+    {
         std::cout << "Block size:    " << block_size.x << ":" << block_size.y << "\n"
                   << "Grid_size:     " << grid_size.x << ":" << grid_size.y << std::endl;
         first = false;
@@ -46,9 +49,8 @@ void Simulation::compute_step(const dim3 block_size) {
     // TODO: did you forget to synchronize ?
 
     auto error = cudaGetLastError();
-    if(error != cudaSuccess) {
-        throw std::runtime_error("Error Launching Kernel: "
-                                 + std::string(cudaGetErrorName(error)) + " - "
-                                 + std::string(cudaGetErrorString(error)));
+    if (error != cudaSuccess)
+    {
+        throw std::runtime_error("Error Launching Kernel: " + std::string(cudaGetErrorName(error)) + " - " + std::string(cudaGetErrorString(error)));
     }
 }
