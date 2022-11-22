@@ -1,0 +1,26 @@
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --time=1:0:0
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --qos=gpu_free
+#SBATCH --account=math-454
+#SBATCH --reservation=Course-math-454
+
+module purge
+module load gcc cuda
+
+rm per_row.txt per_entry.txt
+
+echo "dim N iter time" >> per_row.txt
+echo "dim N iter time" >> per_entry.txt
+
+for block_size in 2 4 8 16 32 64 128 256 512 1024; do
+    srun ./poisson_per_row 8192 $block_size >> per_row.txt
+done
+for x_block_size in 2, 4, 8, 16, 32; do
+    for y_block_size in 2, 4, 8, 16, 32; do
+        srun ./poisson_per_entry 8192 $x_block_size $y_block_size >> per_entry.txt
+    done
+done

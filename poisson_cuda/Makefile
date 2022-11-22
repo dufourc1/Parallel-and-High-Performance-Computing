@@ -21,3 +21,4 @@ simulation_gpu_entry.o: simulation_gpu.cu
 
 clean:
 	rm -f hello poisson *.o *~
+	rm poisson_per_entry poisson_per_row

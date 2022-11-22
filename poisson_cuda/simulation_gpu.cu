@@ -10,16 +10,28 @@
 __global__ void compute_step_one_thread_per_row(
     Grid uo, Grid u, Grid f, float h)
 {
-
-    // TODO: implement here the 'per row' version.
+    int i = threadIdx.x + blockIdx.x * blockDim.x + 1;
+    if (i < uo.m() - 1)
+    {
+        for (int j = 1; j < uo.n() - 1; j++)
+        {
+            u(i, j) = 0.25 * (uo(i - 1, j) + uo(i + 1, j) + uo(i, j - 1) +
+                              uo(i, j + 1) - f(i, j) * h * h);
+        }
+    }
 }
 
 /* -------------------------------------------------------------------------- */
 __global__ void compute_step_one_thread_per_entry(
     Grid uo, Grid u, Grid f, float h)
 {
-
-    // TODO: implement here the 'per entry' version.
+    int i = threadIdx.x + blockIdx.x * blockDim.x + 1;
+    int j = threadIdx.y + blockIdx.y * blockDim.y + 1;
+    if (i < uo.m() - 1 && j < uo.n() - 1)
+    {
+        u(i, j) = 0.25 * (uo(i - 1, j) + uo(i + 1, j) + uo(i, j - 1) +
+                          uo(i, j + 1) - f(i, j) * h * h);
+    }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -31,9 +43,17 @@ void Simulation::compute_step(const dim3 block_size)
     int m = u.m();
     int n = u.n();
 
-    dim3 grid_size; // TODO: define your grid size
+#if defined(PER_ROW)
+    int grid_size_y = 1;
 
-    static bool first{true};
+#else
+    int grid_size_y = (m - 2 + block_size.y - 1) / block_size.y;
+
+#endif
+
+    dim3 grid_size((n - 2 + block_size.x - 1) / block_size.x, grid_size_y); // only works for per row
+
+    static bool first{false};
     if (first)
     {
         std::cout << "Block size:    " << block_size.x << ":" << block_size.y << "\n"
@@ -43,10 +63,12 @@ void Simulation::compute_step(const dim3 block_size)
 
 #if defined(PER_ROW)
     // TODO: call here the implementation by row
+    compute_step_one_thread_per_row<<<grid_size, block_size>>>(uo, u, m_f, 1. / n);
 #else
-    // TODO: call here the implementation by entry
+    compute_step_one_thread_per_entry<<<grid_size, block_size>>>(uo, u, m_f, 1. / n);
+// TODO: call here the implementation by entry
 #endif
-    // TODO: did you forget to synchronize ?
+    cudaDeviceSynchronize();
 
     auto error = cudaGetLastError();
     if (error != cudaSuccess)
