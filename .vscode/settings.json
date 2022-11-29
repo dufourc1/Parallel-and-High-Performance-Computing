@@ -26,6 +26,9 @@
         "ratio": "cpp",
         "streambuf": "cpp",
         "type_traits": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "chrono": "cpp",
+        "iostream": "cpp",
+        "typeinfo": "cpp"
     }
 }
