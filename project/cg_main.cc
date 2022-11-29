@@ -10,8 +10,10 @@ using time_point = std::chrono::time_point<clk>;
 Implementation of a simple CG solver using matrix in the mtx format (Matrix
 market) Any matrix in that format can be used to test the code
 */
-int main(int argc, char ** argv) {
-  if (argc < 2) {
+int main(int argc, char **argv)
+{
+  if (argc < 2)
+  {
     std::cerr << "Usage: " << argv[0] << " [martix-market-filename]"
               << std::endl;
     return 1;
@@ -35,7 +37,6 @@ int main(int argc, char ** argv) {
   solver.solve(x_d);
   second elapsed = clk::now() - t1;
   std::cout << "Time for CG (dense solver)  = " << elapsed.count() << " [s]\n";
-
 
   CGSolverSparse sparse_solver;
   sparse_solver.read_matrix(argv[1]);

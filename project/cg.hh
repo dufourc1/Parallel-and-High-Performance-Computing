@@ -16,11 +16,12 @@ void MatrixCSR::mvm(const std::vector<double> & x, std::vector<double> & y)
 const void MatrixCSR::loadMMMatrix(const std::string & filename) void
 Solver::init_source_term(int n, double h)
 */
-class Solver {
+class Solver
+{
 public:
-  virtual void read_matrix(const std::string & filename) = 0;
+  virtual void read_matrix(const std::string &filename) = 0;
   void init_source_term(double h);
-  virtual void solve(std::vector<double> & x) = 0;
+  virtual void solve(std::vector<double> &x) = 0;
 
   inline int m() const { return m_m; }
   inline int n() const { return m_n; }
@@ -34,21 +35,23 @@ protected:
   double m_tolerance{1e-10};
 };
 
-class CGSolver : public Solver {
+class CGSolver : public Solver
+{
 public:
   CGSolver() = default;
-  virtual void read_matrix(const std::string & filename);
-  virtual void solve(std::vector<double> & x);
+  virtual void read_matrix(const std::string &filename);
+  virtual void solve(std::vector<double> &x);
 
 private:
   Matrix m_A;
 };
 
-class CGSolverSparse : public Solver {
+class CGSolverSparse : public Solver
+{
 public:
   CGSolverSparse() = default;
-  virtual void read_matrix(const std::string & filename);
-  virtual void solve(std::vector<double> & x);
+  virtual void read_matrix(const std::string &filename);
+  virtual void solve(std::vector<double> &x);
 
 private:
   MatrixCOO m_A;

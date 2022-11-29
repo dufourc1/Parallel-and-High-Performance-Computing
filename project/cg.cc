@@ -34,7 +34,8 @@ function x = conjgrad(A, b, x)
 end
 
 */
-void CGSolver::solve(std::vector<double> & x) {
+void CGSolver::solve(std::vector<double> &x)
+{
   std::vector<double> r(m_n);
   std::vector<double> p(m_n);
   std::vector<double> Ap(m_n);
@@ -56,7 +57,8 @@ void CGSolver::solve(std::vector<double> & x) {
 
   // for i = 1:length(b)
   int k = 0;
-  for (; k < m_n; ++k) {
+  for (; k < m_n; ++k)
+  {
     // Ap = A * p;
     std::fill_n(Ap.begin(), Ap.size(), 0.);
     cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
@@ -88,13 +90,15 @@ void CGSolver::solve(std::vector<double> & x) {
 
     // rsold = rsnew;
     rsold = rsnew;
-    if (DEBUG) {
+    if (DEBUG)
+    {
       std::cout << "\t[STEP " << k << "] residual = " << std::scientific
                 << std::sqrt(rsold) << "\r" << std::flush;
     }
   }
 
-  if (DEBUG) {
+  if (DEBUG)
+  {
     std::fill_n(r.begin(), r.size(), 0.);
     cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
                 x.data(), 1, 0., r.data(), 1);
@@ -108,7 +112,8 @@ void CGSolver::solve(std::vector<double> & x) {
   }
 }
 
-void CGSolver::read_matrix(const std::string & filename) {
+void CGSolver::read_matrix(const std::string &filename)
+{
   m_A.read(filename);
   m_m = m_A.m();
   m_n = m_A.n();
@@ -117,7 +122,8 @@ void CGSolver::read_matrix(const std::string & filename) {
 /*
 Sparse version of the cg solver
 */
-void CGSolverSparse::solve(std::vector<double> & x) {
+void CGSolverSparse::solve(std::vector<double> &x)
+{
   std::vector<double> r(m_n);
   std::vector<double> p(m_n);
   std::vector<double> Ap(m_n);
@@ -136,7 +142,8 @@ void CGSolverSparse::solve(std::vector<double> & x) {
 
   // for i = 1:length(b)
   int k = 0;
-  for (; k < m_n; ++k) {
+  for (; k < m_n; ++k)
+  {
     // Ap = A * p;
     m_A.mat_vec(p, Ap);
 
@@ -166,13 +173,15 @@ void CGSolverSparse::solve(std::vector<double> & x) {
 
     // rsold = rsnew;
     rsold = rsnew;
-    if (DEBUG) {
+    if (DEBUG)
+    {
       std::cout << "\t[STEP " << k << "] residual = " << std::scientific
                 << std::sqrt(rsold) << "\r" << std::flush;
     }
   }
 
-  if (DEBUG) {
+  if (DEBUG)
+  {
     m_A.mat_vec(x, r);
     cblas_daxpy(m_n, -1., m_b.data(), 1, r.data(), 1);
     auto res = std::sqrt(cblas_ddot(m_n, r.data(), 1, r.data(), 1)) /
@@ -184,7 +193,8 @@ void CGSolverSparse::solve(std::vector<double> & x) {
   }
 }
 
-void CGSolverSparse::read_matrix(const std::string & filename) {
+void CGSolverSparse::read_matrix(const std::string &filename)
+{
   m_A.read(filename);
   m_m = m_A.m();
   m_n = m_A.n();
@@ -193,10 +203,12 @@ void CGSolverSparse::read_matrix(const std::string & filename) {
 /*
 Initialization of the source term b
 */
-void Solver::init_source_term(double h) {
+void Solver::init_source_term(double h)
+{
   m_b.resize(m_n);
 
-  for (int i = 0; i < m_n; i++) {
+  for (int i = 0; i < m_n; i++)
+  {
     m_b[i] = -2. * i * M_PI * M_PI * std::sin(10. * M_PI * i * h) *
              std::sin(10. * M_PI * i * h);
   }
