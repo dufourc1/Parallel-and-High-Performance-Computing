@@ -1,0 +1,28 @@
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --time=3:0:0
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --qos=gpu_free
+#SBATCH --account=math-454
+#SBATCH --reservation=Course-math-454-week
+
+module purge
+module load gcc cuda
+
+rm per_entry_test.txt
+
+echo "dim N iter junk time" >> per_entry_test.txt
+
+for repeat in {1..10}; do
+echo "repetition $repeat"
+for x_block_size in 2 4 8 16 32 64 128 256 512 1024; do
+    for y_block_size in 2 4 8 16 32 64 128 256 512 1024; do
+        if ((x_block_size * y_block_size <= 1024)) ; then
+            echo "x_block_size = $x_block_size, y_block_size = $y_block_size"
+            srun ./poisson_per_entry 8192 $x_block_size $y_block_size >> per_entry_test.txt
+        fi        
+    done
+done
+done
