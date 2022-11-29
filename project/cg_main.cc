@@ -51,6 +51,6 @@ int main(int argc, char **argv)
   sparse_solver.solve(x_s);
   elapsed = clk::now() - t1;
   std::cout << "Time for CG (sparse solver)  = " << elapsed.count() << " [s]\n";
-
+  std::cout << "End of program" << std::endl;
   return 0;
 }
