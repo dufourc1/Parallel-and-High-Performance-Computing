@@ -21,6 +21,23 @@ public:
   inline int n() const { return m_n; }
   inline double *data() { return m_a.data(); }
 
+  void subset(int index_row_start, int index_row_end)
+  {
+    int m = index_row_end - index_row_start + 1;
+    int n = m_n;
+    std::vector<double> a(m * n);
+    for (int i = 0; i < m; ++i)
+    {
+      for (int j = 0; j < n; ++j)
+      {
+        a[i * n + j] = m_a[(i + index_row_start) * n + j];
+      }
+    }
+    m_m = m;
+    m_n = n;
+    m_a = a;
+  }
+
   void read(const std::string &filename);
 
 private:

@@ -1,4 +1,4 @@
-CXX=g++
+CXX=mpicxx
 LD=${CXX}
 CXXFLAGS+=-Wall -Wextra -Werror -pedantic -std=c++11 -I${OPENBLAS_ROOT}/include -O2
 LDFLAGS+=-lm $(CXXFLAGS) -L${OPENBLAS_ROOT}/lib -lopenblas
