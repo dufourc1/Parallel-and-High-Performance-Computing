@@ -7,6 +7,31 @@ using second = std::chrono::duration<double>;
 using time_point = std::chrono::time_point<clk>;
 
 /*
+Testing the performance of the CG solver
+*/
+void test_solver(Solver &solver, const std::string &filename)
+{
+  solver.read_matrix(filename);
+
+  int n = solver.n();
+  int m = solver.m();
+  double h = 1. / n;
+
+  solver.init_source_term(h);
+
+  std::vector<double> x_d(n);
+  std::fill(x_d.begin(), x_d.end(), 0.);
+  std::string solver_name = typeid(solver).name();
+
+  std::cout << "Call " << solver_name << " on matrix size (" << m << " x " << n << ")"
+            << std::endl;
+  auto t1 = clk::now();
+  solver.solve(x_d);
+  second elapsed = clk::now() - t1;
+  std::cout << "Time for " << solver_name << "  = " << elapsed.count() << " [s]\n";
+}
+
+/*
 Implementation of a simple CG solver using matrix in the mtx format (Matrix
 market) Any matrix in that format can be used to test the code
 */
@@ -20,37 +45,10 @@ int main(int argc, char **argv)
   }
 
   CGSolver solver;
-  solver.read_matrix(argv[1]);
+  test_solver(solver, argv[1]);
 
-  int n = solver.n();
-  int m = solver.m();
-  double h = 1. / n;
-
-  solver.init_source_term(h);
-
-  std::vector<double> x_d(n);
-  std::fill(x_d.begin(), x_d.end(), 0.);
-
-  std::cout << "Call CG dense on matrix size " << m << " x " << n << ")"
-            << std::endl;
-  auto t1 = clk::now();
-  solver.solve(x_d);
-  second elapsed = clk::now() - t1;
-  std::cout << "Time for CG (dense solver)  = " << elapsed.count() << " [s]\n";
-
-  CGSolverSparse sparse_solver;
-  sparse_solver.read_matrix(argv[1]);
-  sparse_solver.init_source_term(h);
-
-  std::vector<double> x_s(n);
-  std::fill(x_s.begin(), x_s.end(), 0.);
-
-  std::cout << "Call CG sparse on matrix size " << m << " x " << n << ")"
-            << std::endl;
-  t1 = clk::now();
-  sparse_solver.solve(x_s);
-  elapsed = clk::now() - t1;
-  std::cout << "Time for CG (sparse solver)  = " << elapsed.count() << " [s]\n";
+  CGSolverSparse solver_sparse;
+  test_solver(solver_sparse, argv[1]);
 
   return 0;
 }

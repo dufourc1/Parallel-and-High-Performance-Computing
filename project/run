@@ -1,0 +1,4 @@
+module load gcc openblas
+make clean 
+make
+srun ./cgsolver lap2D_5pt_n100.mtx 
