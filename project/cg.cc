@@ -6,7 +6,7 @@
 #include <iostream>
 
 const double NEARZERO = 1.0e-14;
-const bool DEBUG = false;
+const bool DEBUG = true;
 
 /*
     cgsolver solves the linear equation A*x = b where A is
@@ -60,7 +60,7 @@ void CGSolver::solve(std::vector<double> &x)
   for (; k < m_n; ++k)
   {
     // Ap = A * p;
-    std::fill_n(Ap.begin(), Ap.size(), 0.);
+    // std::fill_n(Ap.begin(), Ap.size(), 0.);
     cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
                 p.data(), 1, 0., Ap.data(), 1);
 
