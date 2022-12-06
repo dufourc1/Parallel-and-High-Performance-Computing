@@ -47,8 +47,8 @@ int main(int argc, char **argv)
   CGSolver solver;
   test_solver(solver, argv[1]);
 
-  // CGSolverSparse solver;
-  // test_solver(solver, argv[1]);
+  CGSolverSparse solver_sparse;
+  test_solver(solver_sparse, argv[1]);
 
   return 0;
 }

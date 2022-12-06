@@ -29,6 +29,7 @@ public:
       auto a_ = a[z];
 
       y[i] += a_ * x[j];
+
       if (m_is_sym and (i != j))
       {
         y[j] += a_ * x[i];
