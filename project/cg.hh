@@ -15,7 +15,7 @@ public:
   inline int get_rank() const { return rank; };
   inline int get_size() const { return size; };
   void init_source_term();
-  virtual void solve(std::vector<double> &x) = 0;
+  virtual void solve(std::vector<double> &x, int max_iter) = 0;
 
   inline int m() const { return m_m; }
   inline int n() const { return m_n; }
@@ -35,19 +35,35 @@ protected:
 class CGSolver : public Solver
 {
 public:
+  // constructors
   CGSolver(int rank, int size) : Solver(rank, size) {}
   CGSolver(int rank, int size, double h) : Solver(rank, size, h) {}
+
+  // from parent class
   virtual void read_matrix(const std::string &filename);
-  virtual void solve(std::vector<double> &x);
-  void multiply_mat_vector(const std::vector<double> &input, std::vector<double> &output);
-  int get_number_rows() const { return end_row - start_row + 1; }
+  virtual void solve(std::vector<double> &x, int max_iter);
   void init_source_term();
+
+  // linear algebra helpers
+  void multiply_mat_vector(const std::vector<double> &input, std::vector<double> &output);
+
+  // getters
+  int get_number_rows() const { return end_row - start_row; }
+  int get_start() { return start_row; }
+  int get_end() { return end_row; }
+
+  // mpi helpers
+  std::vector<int> get_counts() { return counts; }
+  std::vector<int> get_displacements() { return displacements; }
+  void retrieve_and_concatenate(std::vector<double> &x);
 
 private:
   Matrix m_A;
   int total_rows{0};
-  int start_row{0};
-  int end_row{0};
+  int start_row{0}; // inclusive
+  int end_row{0};   // exclusive
+  std::vector<int> counts;
+  std::vector<int> displacements;
 };
 
 #endif /* __CG_HH__ */

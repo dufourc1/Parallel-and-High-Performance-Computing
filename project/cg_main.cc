@@ -10,7 +10,7 @@ using time_point = std::chrono::time_point<clk>;
 /*
 Testing the performance of the CG solver
 */
-void test_solver(Solver &solver, const std::string &filename)
+void test_solver(CGSolver &solver, const std::string &filename, int max_iter)
 {
   solver.read_matrix(filename);
 
@@ -25,7 +25,7 @@ void test_solver(Solver &solver, const std::string &filename)
   std::cout << "CG " << solver.get_rank() << " on matrix size (" << m << " x " << n << ")"
             << std::endl;
   auto t1 = clk::now();
-  solver.solve(x_d);
+  solver.solve(x_d, max_iter);
   /*
   if (solver.get_rank() == 0)
   {
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
   }
 
   CGSolver solver(rank, size);
-  test_solver(solver, argv[1]);
+  test_solver(solver, argv[1], -1);
 
   return 0;
 }
