@@ -18,6 +18,10 @@ void test_solver(CGSolver &solver, const std::string &filename, int max_iter)
   int m = solver.m();
 
   solver.init_source_term();
+  if (max_iter == -1 || max_iter > n)
+  {
+    max_iter = n;
+  }
 
   std::vector<double> x_d(n);
   std::fill(x_d.begin(), x_d.end(), 0.);

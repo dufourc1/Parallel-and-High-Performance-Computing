@@ -62,17 +62,14 @@ void CGSolver::solve(std::vector<double> &x, int max_iter)
   auto rsold = cblas_ddot(m_m, r.data(), 1, r.data(), 1);
   MPI_Allreduce(MPI_IN_PLACE, &rsold, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-  // for i = 1:length(b)
+  // for i = 1:n (number of rows in original matrix)
   int k = 0;
-  if (max_iter == -1 || max_iter > m_m)
-  {
-    max_iter = m_m;
-  }
   for (; k < max_iter; ++k)
   {
     // retrieve p from all the threads
     retrieve_and_concatenate(p);
 
+    /*
     if (DEBUG)
     {
       int errors = 0;
@@ -88,17 +85,14 @@ void CGSolver::solve(std::vector<double> &x, int max_iter)
         std::cout << "Rank " << rank << " errors: " << errors << std::endl;
       }
     }
+    */
 
     // Ap = A * p;
-    std::fill_n(Ap.begin(), Ap.size(), 0.);
-    // cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
-    //            p.data(), 1, 0., Ap.data(), 1);
     multiply_mat_vector(p, Ap);
 
     // alpha = rsold / (p' * Ap);
     auto w = cblas_ddot(m_m, p.data() + start_row, 1, Ap.data(), 1);
     MPI_Allreduce(MPI_IN_PLACE, &w, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
     auto alpha = rsold / std::max(w, rsold * NEARZERO);
 
     // x = x + alpha * p;
@@ -118,7 +112,7 @@ void CGSolver::solve(std::vector<double> &x, int max_iter)
       break; // Convergence test
 
     auto beta = rsnew / rsold;
-    // p = r + (rsnew / rsold) * p;
+    // p = r + beta * p;
 
     tmp = r;
     cblas_daxpy(m_m, beta, p.data() + start_row, 1, tmp.data(), 1);
@@ -150,32 +144,23 @@ void CGSolver::solve(std::vector<double> &x, int max_iter)
       counts.data(), displacements.data(),
       MPI_DOUBLE,
       MPI_COMM_WORLD);
-  std::vector<double> b(m_n, 0.0);
 
-  if (DEBUG and rank == 0)
+  if (DEBUG)
   {
-    MPI_Allgatherv(
-        // send
-        m_b.data(),
-        // count send,type send
-        m_m, MPI_DOUBLE,
-        // recv buffer
-        b.data(),
-        // counts, displacements
-        counts.data(), displacements.data(),
-        MPI_DOUBLE,
-        MPI_COMM_WORLD);
-    r.resize(m_n);
+
     std::fill_n(r.begin(), r.size(), 0.);
-    cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
-                x.data(), 1, 0., r.data(), 1);
-    cblas_daxpy(m_n, -1., m_b.data(), 1, r.data(), 1);
-    auto res = std::sqrt(cblas_ddot(m_n, r.data(), 1, r.data(), 1)) /
-               std::sqrt(cblas_ddot(m_n, b.data(), 1, b.data(), 1));
+    multiply_mat_vector(x, r);
+    cblas_daxpy(m_m, -1., m_b.data(), 1, r.data(), 1);
+    auto res = std::sqrt(cblas_ddot(m_m, r.data(), 1, r.data(), 1)) /
+               std::sqrt(cblas_ddot(m_m, m_b.data(), 1, m_b.data(), 1));
+    MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     auto nx = std::sqrt(cblas_ddot(m_n, x.data(), 1, x.data(), 1));
-    std::cout << "\t[STEP " << k << "] residual = " << std::scientific
-              << std::sqrt(rsold) << ", ||x|| = " << nx
-              << ", ||Ax - b||/||b|| = " << res << std::endl;
+    if (rank == 0)
+    {
+      std::cout << "\t[STEP " << k << "] residual = " << std::scientific
+                << std::sqrt(rsold) << ", ||x|| = " << nx
+                << ", ||Ax - b||/||b|| = " << res << std::endl;
+    }
   }
 }
 
