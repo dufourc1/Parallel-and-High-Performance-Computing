@@ -1,3 +1,6 @@
 make clean 
 make
-srun -p debug -n 5 -A sds ./cgsolver lap2D_5pt_n100.mtx 
+for i in 1 2 3 4 5 6 7 8 9 10; do
+    echo "Run $i"
+    srun -p debug -n $i -A sds ./cgsolver lap2D_5pt_n100.mtx;
+done

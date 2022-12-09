@@ -8,7 +8,7 @@
 #include <mpi.h>
 
 const double NEARZERO = 1.0e-14;
-const bool DEBUG = true;
+const bool DEBUG = false;
 const bool VERBOSE = false;
 
 /*
