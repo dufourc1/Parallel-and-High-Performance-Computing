@@ -15,7 +15,6 @@ void test_solver(CGSolver &solver, const std::string &filename, int max_iter)
   solver.read_matrix(filename);
 
   int n = solver.n();
-  int m = solver.m();
 
   solver.init_source_term();
   if (max_iter == -1 || max_iter > n)
@@ -26,20 +25,14 @@ void test_solver(CGSolver &solver, const std::string &filename, int max_iter)
   std::vector<double> x_d(n);
   std::fill(x_d.begin(), x_d.end(), 0.);
 
-  std::cout << "CG " << solver.get_rank() << " on matrix size (" << m << " x " << n << ")"
-            << std::endl;
   auto t1 = clk::now();
   solver.solve(x_d, max_iter);
-  /*
-  if (solver.get_rank() == 0)
-  {
-    std::vector<double> buffer(n);
-    MPI_Gather(&x_d, m, MPI_FLOAT, &buffer, m, MPI_FLOAT, 0, MPI_COMM_WORLD);
-  }
-  */
 
   second elapsed = clk::now() - t1;
-  std::cout << "Time for " << solver.get_rank() << "  = " << elapsed.count() << " [s]\n";
+  if (solver.get_rank() == 0)
+  {
+    std::cout << "Elapsed time: " << elapsed.count() << "s" << std::endl;
+  }
 }
 
 /*
@@ -66,7 +59,7 @@ int main(int argc, char **argv)
   }
   if (rank == 0)
   {
-    std::cout << "Testing CG solver on " << size << " processes." << std::endl;
+    std::cout << "CG solver with " << size << " processes." << std::endl;
   }
 
   CGSolver solver(rank, size);

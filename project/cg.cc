@@ -9,7 +9,7 @@
 
 const double NEARZERO = 1.0e-14;
 const bool DEBUG = true;
-const bool VERBOSE = true;
+const bool VERBOSE = false;
 
 /*
     cgsolver solves the linear equation A*x = b where A is
@@ -125,7 +125,7 @@ void CGSolver::solve(std::vector<double> &x, int max_iter)
     rsold = rsnew;
     if (VERBOSE and k % 100 == 0)
     {
-      std::cout << rank << " \t[STEP " << k << "] residual = " << std::scientific
+      std::cout << " \t[STEP " << k << "] residual " << rank << "= " << std::scientific
                 << std::sqrt(rsold) << "\r" << std::endl; // std::flush;
     }
   }
