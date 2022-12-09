@@ -191,7 +191,10 @@ void CGSolver::read_matrix(const std::string &filename)
   // m_A.subset(start_row, end_row);
   m_m = end_row - start_row;
 
-  std::cout << "Rank " << rank << " treats (" << start_row << " x " << end_row << ")" << std::endl;
+  if (DEBUG)
+  {
+    std::cout << "Rank " << rank << " treats (" << start_row << " x " << end_row << ")" << std::endl;
+  }
 }
 
 /*
