@@ -1,7 +1,7 @@
-CXX=g++
+CXX=nvcc
 LD=${CXX}
-CXXFLAGS+=-Wall -Wextra -Werror -pedantic -std=c++11 -I${OPENBLAS_ROOT}/include -O2
-LDFLAGS+=-lm $(CXXFLAGS) -L${OPENBLAS_ROOT}/lib -lopenblas
+CXXFLAGS+=-Xcompiler="-Wall -Wextra -Werror" -std c++11 -O3
+LDFLAGS+=-lm $(CXXFLAGS) -lcublas
 
 OBJS=cg_main.o cg.o matrix.o matrix_coo.o mmio.o
 
@@ -9,6 +9,9 @@ all: cgsolver
 
 cgsolver: $(OBJS)
 	$(LD) -o $@ $(OBJS) $(LDFLAGS)
+
+cg.o: cg.cu
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -f cgsolver *.o *~
