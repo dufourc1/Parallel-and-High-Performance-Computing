@@ -1,6 +1,18 @@
-make clean 
-make
-for i in 1 2 3 4 5 6 7 8 9 10; do
-    echo "Run $i"
-    srun -p debug -n $i -A sds ./cgsolver lap2D_5pt_n100.mtx;
+#!/bin/bash -l
+
+P=(1 2 4 8 16 32 56)
+num_nodes=1
+module purge
+module load gcc openblas mvapich2
+
+filename=weak_scaling.txt
+
+rm $filename
+echo "processors,n,time" >> $filename
+
+for p in ${P[@]}
+do
+    if [ $p -ge 16 ];  then num_nodes=2; fi
+        echo "Run $p processes on $num_nodes nodes"
+        srun  --reservation=Course-math-454-week -A math-454 --nodes $num_nodes  -n $p ./cgsolver lap2D_5pt_n100.mtx >> $filename &
 done

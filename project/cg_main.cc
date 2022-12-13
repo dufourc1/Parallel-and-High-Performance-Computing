@@ -31,7 +31,7 @@ void test_solver(CGSolver &solver, const std::string &filename, int max_iter)
   second elapsed = clk::now() - t1;
   if (solver.get_rank() == 0)
   {
-    std::cout << "Elapsed time: " << elapsed.count() << "s" << std::endl;
+    std::cout << solver.get_size() << "," << n << "," << elapsed.count() << std::endl;
   }
 }
 
@@ -56,10 +56,6 @@ int main(int argc, char **argv)
                 << std::endl;
     }
     return 1;
-  }
-  if (rank == 0)
-  {
-    std::cout << "CG solver with " << size << " processes." << std::endl;
   }
 
   CGSolver solver(rank, size);
