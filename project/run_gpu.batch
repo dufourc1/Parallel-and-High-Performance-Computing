@@ -10,5 +10,6 @@
 
 
 module purge
-module load gcc openblas
+module load gcc openblas cuda
+make clean && make
 srun ./cgsolver lap2D_5pt_n100.mtx 

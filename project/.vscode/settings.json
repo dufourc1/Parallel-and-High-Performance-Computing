@@ -3,5 +3,29 @@
         "activityBar.background": "#232567",
         "titleBar.activeBackground": "#323391",
         "titleBar.activeForeground": "#FAFAFD"
+    },
+    "files.associations": {
+        "*.rmd": "markdown",
+        "*.tcc": "cpp",
+        "cctype": "cpp",
+        "cmath": "cpp",
+        "cstdint": "cpp",
+        "cwchar": "cpp",
+        "vector": "cpp",
+        "functional": "cpp",
+        "initializer_list": "cpp",
+        "iosfwd": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "chrono": "cpp",
+        "clocale": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "exception": "cpp"
     }
 }
