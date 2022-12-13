@@ -4,8 +4,10 @@ P=(1 2 4 8 16 32 56)
 num_nodes=1
 module purge
 module load gcc openblas mvapich2
+make clean 
+make
 
-filename=weak_scaling.txt
+filename=strong_scaling.txt
 
 rm $filename
 echo "processors,n,time" >> $filename
@@ -14,5 +16,5 @@ for p in ${P[@]}
 do
     if [ $p -ge 16 ];  then num_nodes=2; fi
         echo "Run $p processes on $num_nodes nodes"
-        srun  --reservation=Course-math-454-week -A math-454 --nodes $num_nodes  -n $p ./cgsolver lap2D_5pt_n100.mtx >> $filename &
+        srun  --reservation=Course-math-454 -A math-454 --nodes $num_nodes  -n $p ./cgsolver $p >> $filename &
 done

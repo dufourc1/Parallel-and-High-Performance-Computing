@@ -57,6 +57,7 @@ public:
   std::vector<int> get_displacements() { return displacements; }
   void retrieve_and_concatenate(std::vector<double> &x);
   void generate_lap1d_matrix(int size);
+  void split_work();
 
 private:
   Matrix m_A;

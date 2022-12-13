@@ -174,6 +174,10 @@ void CGSolver::read_matrix(const std::string &filename)
   {
     h = 1.0 / m_n;
   }
+}
+
+void CGSolver::split_work()
+{
   counts.resize(size, m_n / size);
   // subset the matrix according to the rank and size
   for (int i = 0; i < m_n % size; ++i)
@@ -188,7 +192,6 @@ void CGSolver::read_matrix(const std::string &filename)
   start_row = displacements[rank];
   end_row = displacements[rank + 1];
 
-  // m_A.subset(start_row, end_row);
   m_m = end_row - start_row;
 
   if (DEBUG)
