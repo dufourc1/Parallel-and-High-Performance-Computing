@@ -259,3 +259,23 @@ void CGSolver::retrieve_and_concatenate(std::vector<double> &x)
       MPI_DOUBLE,
       MPI_COMM_WORLD);
 }
+
+void CGSolver::generate_lap1d_matrix(int size)
+{
+  m_A.resize(size, size);
+  m_m = size;
+  m_n = size;
+
+  for (int i = 0; i < size; ++i)
+  {
+    for (int j = 0; j < size; ++j)
+    {
+      m_A(i, j) = 0;
+    }
+    if (i > 0)
+      m_A(i, i - 1) = -1;
+    m_A(i, i) = 2;
+    if (i < size - 1)
+      m_A(i, i + 1) = -1;
+  }
+}
