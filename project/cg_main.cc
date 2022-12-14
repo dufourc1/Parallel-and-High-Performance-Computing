@@ -31,8 +31,6 @@ int main(int argc, char **argv)
   std::vector<double> x_d(n);
   std::fill(x_d.begin(), x_d.end(), 0.);
 
-  std::cout << "n: " << n << " m:" << CGSolver.m() << std::endl;
-
   auto t1 = clk::now();
   CGSolver.solve(x_d);
   second elapsed = clk::now() - t1;

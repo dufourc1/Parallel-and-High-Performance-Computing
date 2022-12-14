@@ -6,13 +6,7 @@
 #include <cblas.h>
 
 const double NEARZERO = 1.0e-14;
-
-// vecVec
-#define BLOCK_DIM_VEC 32
-
-// matVec
-#define NB_ELEM_MAT 32
-#define BLOCK_SIZE_MAT 32
+const bool DEBUG = false;
 
 // ouput = A*x
 __global__ void matrix_vector(double *A, double *x, double *output, int n)
@@ -172,8 +166,11 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
 
         // check convergence
         cudaMemcpy(&r_norm, rsnew, sizeof(double), cudaMemcpyDeviceToHost);
-        std::cout << "\t[STEP " << k << "] residual = " << std::scientific
-                  << std::sqrt(r_norm) << "\r" << std::endl;
+        if (DEBUG)
+        {
+            std::cout << "\t[STEP " << k << "] residual = " << std::scientific
+                      << std::sqrt(r_norm) << "\r" << std::endl;
+        }
         if (std::sqrt(r_norm) < m_tolerance)
             break;
 
@@ -186,8 +183,10 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
         // rsold = rsnew
         copy_scalar<<<1, 1>>>(rsnew, rsold);
     }
-    std::cout << "Converged in " << k << " iterations. Residual " << std::scientific << std::sqrt(r_norm) << std::endl;
-
+    if (DEBUG)
+    {
+        std::cout << "Converged in " << k << " iterations. Residual " << std::scientific << std::sqrt(r_norm) << std::endl;
+    }
     cublasDestroy(handle);
 
     cudaFree(r);
