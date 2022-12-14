@@ -26,6 +26,7 @@
         "clocale": "cpp",
         "cstdio": "cpp",
         "cstdlib": "cpp",
-        "exception": "cpp"
+        "exception": "cpp",
+        "string": "cpp"
     }
 }

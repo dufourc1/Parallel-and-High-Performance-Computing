@@ -1,4 +1,1 @@
-module load gcc openblas
-make clean 
-make
-srun ./cgsolver lap2D_5pt_n100.mtx 
+module purge && module load gcc openblas cuda && make clean && make && rm slurm-* && sbatch run_gpu.batch && watch -n 1 Squeue

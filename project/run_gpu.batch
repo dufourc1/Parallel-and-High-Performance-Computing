@@ -1,15 +1,14 @@
 #!/bin/bash -l
 
 #SBATCH --nodes=1
-#SBATCH --time=0:0:5
+#SBATCH --time=0:20:00
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --qos=gpu_free
 #SBATCH --account=math-454
-#SBATCH --reservation=Course-math-454
+#nope SBATCH --reservation=Course-math-454
 
 
 module purge
 module load gcc openblas cuda
-make clean && make
 srun ./cgsolver lap2D_5pt_n100.mtx 

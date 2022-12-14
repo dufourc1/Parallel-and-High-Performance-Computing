@@ -1,17 +1,17 @@
 CXX=nvcc
 LD=${CXX}
 CXXFLAGS+=-Xcompiler="-Wall -Wextra -Werror" -std c++11 -O3
-LDFLAGS+=-lm $(CXXFLAGS) -lcublas
+LDFLAGS+=-lm $(CXXFLAGS) -lcublas -lopenblas
 
-OBJS=cg_main.o cg.o matrix.o matrix_coo.o mmio.o
+OBJS=cg_main.o cg.o matrix.o matrix_coo.o mmio.o conjugate_gradient.o
 
 all: cgsolver
 
-cgsolver: $(OBJS)
+cgsolver: $(OBJS) 
 	$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
-#cg.o: cg.cu
-#	$(CXX) $(CXXFLAGS) -c $< -o $@
+conjugate_gradient.o: conjugate_gradient.cu
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -f cgsolver *.o *~

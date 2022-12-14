@@ -21,14 +21,17 @@ int main(int argc, char **argv)
 
   CGSolver CGSolver;
   CGSolver.read_matrix(argv[1]);
+  // CGSolver.generate_lap1d_matrix(64);
 
   int n = CGSolver.n();
+  CGSolver.set_max_iter(10);
   double h = 1. / n;
 
   CGSolver.init_source_term(h);
-
   std::vector<double> x_d(n);
   std::fill(x_d.begin(), x_d.end(), 0.);
+
+  std::cout << "n: " << n << " m:" << CGSolver.m() << std::endl;
 
   auto t1 = clk::now();
   CGSolver.solve(x_d);

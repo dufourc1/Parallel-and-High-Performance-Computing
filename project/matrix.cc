@@ -9,6 +9,8 @@ void Matrix::read(const std::string &fn)
   mat.read(fn);
 
   resize(mat.m(), mat.n());
+  int size = 2000;
+  resize(size, size);
 
   for (int z = 0; z < mat.nz(); ++z)
   {
@@ -16,10 +18,13 @@ void Matrix::read(const std::string &fn)
     auto j = mat.jcn[z];
     auto a = mat.a[z];
 
-    m_a[i * m_n + j] = a;
-    if (mat.is_sym())
+    if ((i < size) && (j < size))
     {
-      m_a[j * m_n + i] = a;
+      m_a[i * m_n + j] = a;
+      if (mat.is_sym())
+      {
+        m_a[j * m_n + i] = a;
+      }
     }
   }
 }

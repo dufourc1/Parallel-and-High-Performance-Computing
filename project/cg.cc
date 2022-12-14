@@ -4,6 +4,7 @@
 #include <cblas.h>
 #include <cmath>
 #include <iostream>
+#include <cuda_runtime.h>
 
 const double NEARZERO = 1.0e-14;
 const bool DEBUG = true;
@@ -32,87 +33,53 @@ function x = conjgrad(A, b, x)
         rsold = rsnew;
     end
 end
-
 */
+
 void CGSolver::solve(std::vector<double> &x)
 {
-  std::vector<double> r(m_n);
-  std::vector<double> p(m_n);
-  std::vector<double> Ap(m_n);
-  std::vector<double> tmp(m_n);
 
-  // r = b - A * x;
-  std::fill_n(Ap.begin(), Ap.size(), 0.);
-  cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
-              x.data(), 1, 0., Ap.data(), 1);
-  // int shared_mem = rows_per_block * threads_per_block * sizeof(double);
-  // do_matrix_multiplication<<<gridDim, blockDim, shared_mem>>>(m_A, m_n, x, Ap);
+  // device memory allocation for matrix and vectors
+  double *A_device;
+  double *b_device;
+  double *x_device;
 
-  r = m_b;
-  cblas_daxpy(m_n, -1., Ap.data(), 1, r.data(), 1);
+  cudaMalloc((void **)&A_device, m_m * m_n * sizeof(double));
+  cudaMalloc((void **)&b_device, m_m * sizeof(double));
+  cudaMalloc((void **)&x_device, m_n * sizeof(double));
 
-  // p = r;
-  p = r;
+  // copy data from host to device
+  cudaMemcpy(A_device, m_A.data(), m_m * m_n * sizeof(double), cudaMemcpyHostToDevice);
+  cudaMemcpy(b_device, m_b.data(), m_m * sizeof(double), cudaMemcpyHostToDevice);
+  cudaMemcpy(x_device, x.data(), m_n * sizeof(double), cudaMemcpyHostToDevice);
 
-  // rsold = r' * r;
-  auto rsold = cblas_ddot(m_n, r.data(), 1, p.data(), 1);
+  solve_CUDA(A_device, b_device, x_device);
 
-  // for i = 1:length(b)
-  int k = 0;
-  for (; k < m_n; ++k)
-  {
-    // Ap = A * p;
-    // std::fill_n(Ap.begin(), Ap.size(), 0.);
-    cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
-                p.data(), 1, 0., Ap.data(), 1);
-    // do_matrix_multiplication<<<gridDim, blockDim, shared_mem>>>(m_A.data(), m_n, p, Ap);
+  cudaDeviceSynchronize();
 
-    // alpha = rsold / (p' * Ap);
-    auto alpha = rsold / std::max(cblas_ddot(m_n, p.data(), 1, Ap.data(), 1),
-                                  rsold * NEARZERO);
-
-    // x = x + alpha * p;
-    cblas_daxpy(m_n, alpha, p.data(), 1, x.data(), 1);
-
-    // r = r - alpha * Ap;
-    cblas_daxpy(m_n, -alpha, Ap.data(), 1, r.data(), 1);
-
-    // rsnew = r' * r;
-    auto rsnew = cblas_ddot(m_n, r.data(), 1, r.data(), 1);
-
-    // if sqrt(rsnew) < 1e-10
-    //   break;
-    if (std::sqrt(rsnew) < m_tolerance)
-      break; // Convergence test
-
-    auto beta = rsnew / rsold;
-    // p = r + (rsnew / rsold) * p;
-    tmp = r;
-    cblas_daxpy(m_n, beta, p.data(), 1, tmp.data(), 1);
-    p = tmp;
-
-    // rsold = rsnew;
-    rsold = rsnew;
-    if (DEBUG)
-    {
-      std::cout << "\t[STEP " << k << "] residual = " << std::scientific
-                << std::sqrt(rsold) << "\r" << std::flush;
-    }
-  }
+  // retrieve the solution from device to host
+  cudaMemcpy(x.data(), x_device, m_n * sizeof(double), cudaMemcpyDeviceToHost);
 
   if (DEBUG)
   {
+    std::cout << "||x|| = " << std::scientific << cblas_ddot(m_n, x.data(), 1, x.data(), 1) << std::endl;
+    std::vector<double> r(m_m);
     std::fill_n(r.begin(), r.size(), 0.);
     cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
                 x.data(), 1, 0., r.data(), 1);
     cblas_daxpy(m_n, -1., m_b.data(), 1, r.data(), 1);
-    auto res = std::sqrt(cblas_ddot(m_n, r.data(), 1, r.data(), 1)) /
+    auto rnorm = std::sqrt(cblas_ddot(m_n, r.data(), 1, r.data(), 1));
+    auto res = rnorm /
                std::sqrt(cblas_ddot(m_n, m_b.data(), 1, m_b.data(), 1));
     auto nx = std::sqrt(cblas_ddot(m_n, x.data(), 1, x.data(), 1));
-    std::cout << "\t[STEP " << k << "] residual = " << std::scientific
-              << std::sqrt(rsold) << ", ||x|| = " << nx
+    std::cout << "residual = " << std::scientific
+              << std::sqrt(rnorm) << ", ||x|| = " << nx
               << ", ||Ax - b||/||b|| = " << res << std::endl;
   }
+
+  // free device memory
+  cudaFree(A_device);
+  cudaFree(b_device);
+  cudaFree(x_device);
 }
 
 void CGSolver::read_matrix(const std::string &filename)
@@ -133,5 +100,23 @@ void CGSolver::init_source_term(double h)
   {
     m_b[i] = -2. * i * M_PI * M_PI * std::sin(10. * M_PI * i * h) *
              std::sin(10. * M_PI * i * h);
+  }
+}
+
+void CGSolver::generate_lap1d_matrix(int size)
+{
+  m_A.resize(size, size);
+  m_A.setZero();
+  m_m = size;
+  m_n = size;
+
+  for (int i = 0; i < size; ++i)
+  {
+    m_A(i, i) = 2;
+
+    if (i > 0)
+      m_A(i, i - 1) = -1;
+    if (i < size - 1)
+      m_A(i, i + 1) = -1;
   }
 }
