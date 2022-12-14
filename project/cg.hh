@@ -57,7 +57,8 @@ public:
   std::vector<int> get_displacements() { return displacements; }
   void retrieve_and_concatenate(std::vector<double> &x);
   void generate_lap1d_matrix(int size);
-  void split_work();
+  void split_work(int n = -1);
+  void printMatrix();
 
 private:
   Matrix m_A;
@@ -66,6 +67,8 @@ private:
   int end_row{0};   // exclusive
   std::vector<int> counts;
   std::vector<int> displacements;
+  bool work_split{false};
+  bool subset{true};
 };
 
 #endif /* __CG_HH__ */

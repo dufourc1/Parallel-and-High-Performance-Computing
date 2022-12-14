@@ -39,6 +39,7 @@ public:
   }
 
   void read(const std::string &filename);
+  inline void setZero() { std::fill_n(m_a.begin(), m_a.size(), 0.); }
 
 private:
   int m_m{0};

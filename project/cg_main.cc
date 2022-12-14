@@ -3,6 +3,7 @@
 #include <iostream>
 #include <mpi.h>
 #include <sstream>
+#include <math.h>
 
 using clk = std::chrono::high_resolution_clock;
 using second = std::chrono::duration<double>;
@@ -32,17 +33,35 @@ int main(int argc, char **argv)
   }
 
   CGSolver solver(rank, size);
+  int max_iter = 100;
+  int n = -1;
 
-  // int number_processes = atoi(argv[1]);
-  // solver.generate_lap1d_matrix(number_processes * 1000);
+  if (argc == 2)
+  {
+    solver.read_matrix(argv[1]);
+    solver.split_work();
+    max_iter = solver.n();
+  }
+  else if (argc == 3)
+  {
+    int n = floor(sqrt(size) * atoi(argv[2]));
+    solver.split_work(n);
+    solver.generate_lap1d_matrix(n);
+    max_iter = std::min(max_iter, n);
+  }
+  else
+  {
+    if (rank == 0)
+    {
+      std::cerr << "Usage: " << argv[0] << " [martix-market-filename] or [matrix-number-rows]"
+                << std::endl;
+    }
+    return 1;
+  }
 
-  solver.read_matrix(argv[1]);
-  solver.split_work();
-
-  int n = solver.n();
+  n = solver.n();
 
   solver.init_source_term();
-  int max_iter = 500;
 
   std::vector<double> x_d(n);
   std::fill(x_d.begin(), x_d.end(), 0.);

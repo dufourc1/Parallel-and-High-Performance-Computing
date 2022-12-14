@@ -176,11 +176,21 @@ void CGSolver::read_matrix(const std::string &filename)
   }
 }
 
-void CGSolver::split_work()
+void CGSolver::split_work(int n)
 {
-  counts.resize(size, m_n / size);
+  if (n <= 0)
+  {
+    n = m_n;
+    subset = false;
+  }
+  if (h == 0.0)
+  {
+    h = 1.0 / n;
+  }
+
+  counts.resize(size, n / size);
   // subset the matrix according to the rank and size
-  for (int i = 0; i < m_n % size; ++i)
+  for (int i = 0; i < n % size; ++i)
   {
     counts[i]++;
   }
@@ -193,6 +203,12 @@ void CGSolver::split_work()
   end_row = displacements[rank + 1];
 
   m_m = end_row - start_row;
+  m_n = n;
+  if (subset)
+  {
+    m_A.subset(start_row, end_row);
+  }
+  work_split = true;
 
   if (DEBUG)
   {
@@ -231,14 +247,19 @@ output = A[start_row:end_row,:] * input
 */
 void CGSolver::multiply_mat_vector(const std::vector<double> &input, std::vector<double> &output)
 {
+
+  int indent = 0;
+  if (!subset)
+  {
+    indent = start_row * m_n;
+  }
   cblas_dgemv(
       CblasRowMajor,
       CblasNoTrans,
       m_m,
       m_n,
       1.,
-      // adjust matrix pointer to start_row
-      m_A.data() + start_row * m_n,
+      m_A.data() + indent,
       // number of columns is the same
       m_n,
       input.data(),
@@ -265,20 +286,50 @@ void CGSolver::retrieve_and_concatenate(std::vector<double> &x)
 
 void CGSolver::generate_lap1d_matrix(int size)
 {
-  m_A.resize(size, size);
-  m_m = size;
-  m_n = size;
 
-  for (int i = 0; i < size; ++i)
+  int start = 0;
+  int end = size;
+  if (work_split)
   {
-    for (int j = 0; j < size; ++j)
-    {
-      m_A(i, j) = 0;
-    }
-    if (i > 0)
-      m_A(i, i - 1) = -1;
-    m_A(i, i) = 2;
-    if (i < size - 1)
-      m_A(i, i + 1) = -1;
+    m_A.resize(m_m, m_n);
+    start = start_row;
+    end = end_row;
   }
+  else
+  {
+    m_A.resize(size, size);
+    m_m = size;
+    m_n = size;
+  }
+
+  m_A.setZero();
+
+  for (int i = 0; i < end - start; ++i)
+  {
+    int index_i = i;
+    int index_j = i + start;
+    m_A(index_i, index_j) = 2.0;
+    if (index_j > 0)
+      m_A(index_i, index_j - 1) = 1.0;
+    if (index_j < m_A.n() - 1)
+      m_A(index_i, index_j + 1) = 1.0;
+  }
+  if (DEBUG && VERBOSE)
+  {
+    printMatrix();
+  }
+}
+
+void CGSolver::printMatrix()
+{
+  std::cout << "Matrix A: rank" << rank << std::endl;
+  for (int i = 0; i < m_A.m(); ++i)
+  {
+    for (int j = 0; j < m_A.n(); ++j)
+    {
+      std::cout << m_A(i, j) << " ";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << "--------------" << std::endl;
 }
