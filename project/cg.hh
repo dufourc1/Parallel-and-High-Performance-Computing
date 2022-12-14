@@ -8,11 +8,11 @@
 #define __CG_HH__
 
 /*
-Solver::solve(std::vector<double> & x)
-Solver::read_matrix(const std::string & filename)
-Solver::init_source_term(int n, double h)
+CGSolver::solve(std::vector<double> & x)
+CGSolver::read_matrix(const std::string & filename)
+CGSolver::init_source_term(int n, double h)
 */
-class Solver
+class CGSolver
 {
 public:
   void read_matrix(const std::string &filename);

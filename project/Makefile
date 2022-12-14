@@ -10,8 +10,8 @@ all: cgsolver
 cgsolver: $(OBJS)
 	$(LD) -o $@ $(OBJS) $(LDFLAGS)
 
-cg.o: cg.cu
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+#cg.o: cg.cu
+#	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -f cgsolver *.o *~

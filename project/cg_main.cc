@@ -7,7 +7,7 @@ using second = std::chrono::duration<double>;
 using time_point = std::chrono::time_point<clk>;
 
 /*
-Implementation of a simple CG solver using matrix in the mtx format (Matrix
+Implementation of a simple CG CGSolver using matrix in the mtx format (Matrix
 market) Any matrix in that format can be used to test the code
 */
 int main(int argc, char **argv)
@@ -19,19 +19,19 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  Solver solver;
-  solver.read_matrix(argv[1]);
+  CGSolver CGSolver;
+  CGSolver.read_matrix(argv[1]);
 
-  int n = solver.n();
+  int n = CGSolver.n();
   double h = 1. / n;
 
-  solver.init_source_term(h);
+  CGSolver.init_source_term(h);
 
   std::vector<double> x_d(n);
   std::fill(x_d.begin(), x_d.end(), 0.);
 
   auto t1 = clk::now();
-  solver.solve(x_d);
+  CGSolver.solve(x_d);
   second elapsed = clk::now() - t1;
   std::cout << "Time = " << elapsed.count() << " [s]\n";
 

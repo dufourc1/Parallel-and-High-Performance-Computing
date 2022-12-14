@@ -9,7 +9,7 @@ const double NEARZERO = 1.0e-14;
 const bool DEBUG = true;
 
 /*
-    Solver solves the linear equation A*x = b where A is
+    CGSolver solves the linear equation A*x = b where A is
     of size m x n
 
 Code based on MATLAB code (from wikipedia ;-)  ):
@@ -34,7 +34,7 @@ function x = conjgrad(A, b, x)
 end
 
 */
-void Solver::solve(std::vector<double> &x)
+void CGSolver::solve(std::vector<double> &x)
 {
   std::vector<double> r(m_n);
   std::vector<double> p(m_n);
@@ -115,7 +115,7 @@ void Solver::solve(std::vector<double> &x)
   }
 }
 
-void Solver::read_matrix(const std::string &filename)
+void CGSolver::read_matrix(const std::string &filename)
 {
   m_A.read(filename);
   m_m = m_A.m();
@@ -125,7 +125,7 @@ void Solver::read_matrix(const std::string &filename)
 /*
 Initialization of the source term b
 */
-void Solver::init_source_term(double h)
+void CGSolver::init_source_term(double h)
 {
   m_b.resize(m_n);
 
