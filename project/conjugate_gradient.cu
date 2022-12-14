@@ -3,6 +3,7 @@
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 #include <iostream>
+#include <cblas.h>
 
 const double NEARZERO = 1.0e-14;
 
@@ -186,8 +187,6 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
         copy_scalar<<<1, 1>>>(rsnew, rsold);
     }
     std::cout << "Converged in " << k << " iterations. Residual " << std::scientific << std::sqrt(r_norm) << std::endl;
-    cublasDdot(handle, m_n, x, 1, x, 1, temp_scalar);
-    print_gpu_value(scalar_temp, 1);
 
     cublasDestroy(handle);
 

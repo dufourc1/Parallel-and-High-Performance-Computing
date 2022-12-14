@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   // CGSolver.generate_lap1d_matrix(64);
 
   int n = CGSolver.n();
-  CGSolver.set_max_iter(10);
+  CGSolver.set_max_iter(n);
   double h = 1. / n;
 
   CGSolver.init_source_term(h);
