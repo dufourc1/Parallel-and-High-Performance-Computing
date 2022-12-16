@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 #SBATCH --nodes=1
-#SBATCH --time=0:02:00
+#SBATCH --time=0:30:00
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --account=sds 
@@ -12,4 +12,18 @@
 
 module purge
 module load gcc openblas cuda
-srun ./cgsolver lap2D_5pt_n100.mtx 
+
+filename=gpu_original_mat.txt
+echo "time_allocation,time_retrieve,time_total,n,rows_per_block,threads_per_line, max_iter" >> $filename
+
+for repeat in {1..5}; do 
+    echo "repeat $repeat"
+        for threads_per_row in 1 2 4 8 16 32 64 128 256 512 1024; do  
+            for rows_per_block in 1 2 4 8 16 32 64 128 256 512 1024; do
+                if ((threads_per_row * rows_per_block <= 1024)) ; then
+                    echo "N=$N, threads_per_row=$threads_per_row, rows_per_block=$rows_per_block"
+                    srun ./cgsolver lap2D_5pt_n100.mtx $rows_per_block $threads_per_row 500 >> $filename
+                fi
+            done 
+        done 
+done 

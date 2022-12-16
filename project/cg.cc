@@ -8,7 +8,7 @@
 #include <chrono>
 
 const double NEARZERO = 1.0e-14;
-const bool DEBUG = true;
+const bool DEBUG = false;
 using clk = std::chrono::high_resolution_clock;
 using second = std::chrono::duration<double>;
 using time_point = std::chrono::time_point<clk>;
@@ -58,7 +58,6 @@ void CGSolver::solve(std::vector<double> &x)
   cudaMemcpy(x_device, x.data(), m_n * sizeof(double), cudaMemcpyHostToDevice);
   cudaDeviceSynchronize();
   second elapsed = clk::now() - t1;
-  std::cout << "Time for allocating memory = " << elapsed.count() << " [s]\n";
 
   solve_CUDA(A_device, b_device, x_device);
 
@@ -68,7 +67,6 @@ void CGSolver::solve(std::vector<double> &x)
   auto t2 = clk::now();
   cudaMemcpy(x.data(), x_device, m_n * sizeof(double), cudaMemcpyDeviceToHost);
   second elapsed2 = clk::now() - t2;
-  std::cout << "Time for retrieving solution = " << elapsed2.count() << " [s]\n";
 
   if (DEBUG)
   {
@@ -78,7 +76,6 @@ void CGSolver::solve(std::vector<double> &x)
                 x.data(), 1, 0., r.data(), 1);
     cblas_daxpy(m_n, -1., m_b.data(), 1, r.data(), 1);
     auto rnorm = cblas_ddot(m_n, r.data(), 1, r.data(), 1);
-    std::cout << "Residual norm squared = " << rnorm << std::endl;
     auto res = rnorm / cblas_ddot(m_n, m_b.data(), 1, m_b.data(), 1);
     auto nx = cblas_ddot(m_n, x.data(), 1, x.data(), 1);
     std::cout << "residual = " << std::scientific
@@ -90,6 +87,7 @@ void CGSolver::solve(std::vector<double> &x)
   cudaFree(A_device);
   cudaFree(b_device);
   cudaFree(x_device);
+  std::cout << elapsed.count() << "," << elapsed2.count() << ",";
 }
 
 void CGSolver::read_matrix(const std::string &filename)

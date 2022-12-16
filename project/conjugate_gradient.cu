@@ -6,7 +6,7 @@
 #include <cblas.h>
 
 const double NEARZERO = 1.0e-14;
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 // ouput = A*x
 // only work for one dimensional grid: each row is processed by one block at most
@@ -150,17 +150,14 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
     cublasCreate(&handle);
     cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
-    int rows_per_block = 32;
-    int threads_per_line = 32;
-
     // shared memory for matrix vector multiplication
-    int shared_mem = rows_per_block * threads_per_line * sizeof(double);
-    dim3 matrix_block_size(rows_per_block, threads_per_line);
+    int shared_mem = rows_per_block * threads_per_row * sizeof(double);
+    dim3 matrix_block_size(rows_per_block, threads_per_row);
     // one row is assigned to one block (not more) →  only a one dimensional grid
     dim3 matrix_grid_size((m_n + matrix_block_size.x - 1) / matrix_block_size.x);
 
     // 1 thread per row for vector operations
-    dim3 vector_block_size(threads_per_line);
+    dim3 vector_block_size(threads_per_row);
     dim3 vector_grid_size((m_n + vector_block_size.x - 1) / vector_block_size.x);
 
     // temp = A*x

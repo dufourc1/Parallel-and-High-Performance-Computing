@@ -15,6 +15,11 @@ CGSolver::init_source_term(int n, double h)
 class CGSolver
 {
 public:
+  CGSolver(int n_threads_per_row, int n_rows_per_block)
+  {
+    this->threads_per_row = n_threads_per_row;
+    this->rows_per_block = n_rows_per_block;
+  };
   void read_matrix(const std::string &filename);
   void init_source_term(double h);
   void solve(std::vector<double> &x);
@@ -25,6 +30,8 @@ public:
   void set_max_iter(int number) { max_iter = number; }
 
 protected:
+  int threads_per_row;
+  int rows_per_block;
   int m_m{0};
   int m_n{0};
   std::vector<double> m_b;
