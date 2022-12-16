@@ -80,8 +80,10 @@ void CGSolver::solve(std::vector<double> &x)
     // if sqrt(rsnew) < 1e-10
     //   break;
     if (std::sqrt(rsnew) < m_tolerance)
+    {
+      rsold = rsnew;
       break; // Convergence test
-
+    }
     auto beta = rsnew / rsold;
     // p = r + (rsnew / rsold) * p;
     tmp = r;
@@ -93,7 +95,7 @@ void CGSolver::solve(std::vector<double> &x)
     if (DEBUG)
     {
       std::cout << "\t[STEP " << k << "] residual = " << std::scientific
-                << std::sqrt(rsold) << "\r" << std::flush;
+                << std::sqrt(rsold) << "\r" << std::endl;
     }
   }
 
@@ -103,12 +105,17 @@ void CGSolver::solve(std::vector<double> &x)
     cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
                 x.data(), 1, 0., r.data(), 1);
     cblas_daxpy(m_n, -1., m_b.data(), 1, r.data(), 1);
+    float actual_norm = cblas_ddot(m_n, r.data(), 1, r.data(), 1);
+
     auto res = std::sqrt(cblas_ddot(m_n, r.data(), 1, r.data(), 1)) /
                std::sqrt(cblas_ddot(m_n, m_b.data(), 1, m_b.data(), 1));
     auto nx = std::sqrt(cblas_ddot(m_n, x.data(), 1, x.data(), 1));
     std::cout << "\t[STEP " << k << "] residual = " << std::scientific
               << std::sqrt(rsold) << ", ||x|| = " << nx
               << ", ||Ax - b||/||b|| = " << res << std::endl;
+
+    std::cout << "Actual error norm    = " << std::scientific << std::sqrt(actual_norm) << std::endl;
+    std::cout << "Actual squared norm = " << std::scientific << actual_norm << std::endl;
   }
 }
 
