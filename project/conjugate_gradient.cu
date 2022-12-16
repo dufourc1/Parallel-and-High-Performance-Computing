@@ -6,21 +6,46 @@
 #include <cblas.h>
 
 const double NEARZERO = 1.0e-14;
-const bool DEBUG = false;
+const bool DEBUG = true;
 
 // ouput = A*x
+// only work for one dimensional grid: each row is processed by one block at most
 __global__ void matrix_vector(double *A, double *x, double *output, int n)
 {
     // stupid implementation where each thread computes one element of the output
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index < n)
+    extern __shared__ double row_sums[];
+    int row = blockIdx.x * blockDim.x + threadIdx.x;
+    int tid = threadIdx.x * blockDim.y + threadIdx.y;
+    if (row < n)
     {
         double sum = 0;
-        for (int j = 0; j < n; j++)
+        // blockIdx.y should be 1 for this kernel to work
+        for (int j = threadIdx.y; j < n; j += blockDim.y)
         {
-            sum += A[index * n + j] * x[j];
+            sum += A[row * n + j] * x[j];
         }
-        output[index] = sum;
+
+        // store result in shared memory
+        row_sums[tid] = sum;
+
+        // wait for all threads in the block to finish and then aggregate the results
+        __syncthreads();
+        // jmp >>= 1 is equivalent to jmp /= 2
+        for (int jmp = blockDim.y / 2; jmp > 0; jmp >>= 1)
+        {
+            // first iteration, each thread in the first half of the block adds the result of the second half to its result
+            if (threadIdx.y < jmp)
+            {
+                row_sums[tid] += row_sums[tid + jmp];
+            }
+            __syncthreads();
+        }
+
+        // first thread in the row writes the result to global memory since it aggregated all the results
+        if (threadIdx.y == 0)
+        {
+            output[row] = row_sums[tid];
+        }
     }
 }
 
@@ -125,21 +150,28 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
     cublasCreate(&handle);
     cublasSetPointerMode(handle, CUBLAS_POINTER_MODE_DEVICE);
 
-    // 1 thread per row
-    // one thread per column
-    dim3 matrix_block_size((m_m + 31) / 32);
-    dim3 matrix_grid_size((m_n + matrix_block_size.x - 1) / matrix_block_size.x, (m_n + matrix_block_size.y - 1) / matrix_block_size.y);
+    int rows_per_block = 32;
+    int threads_per_line = 32;
+    int shared_mem = rows_per_block * threads_per_line * sizeof(double);
+
+    dim3 matrix_block_size(rows_per_block, threads_per_line);
+    // one row is assigned to one block (not more) →  only a one dimensional grid
+    dim3 matrix_grid_size((m_n + matrix_block_size.x - 1) / matrix_block_size.x);
 
     // 1 thread per index
     dim3 vector_block_size((m_m + 31) / 32);
     dim3 vector_grid_size((m_n + vector_block_size.x - 1) / vector_block_size.x);
 
     // r = b - A*x
-    matrix_vector<<<matrix_grid_size, matrix_block_size>>>(A, x, temp, m_n);
+    matrix_vector<<<matrix_grid_size, matrix_block_size, shared_mem>>>(A, x, temp, m_n);
     diff_vector<<<vector_grid_size, vector_block_size>>>(b, temp, r, m_n);
     copy_vector<<<vector_grid_size, vector_block_size>>>(r, p, m_n);
 
     cublasDdot(handle, m_n, p, 1, p, 1, rsold);
+
+    /*
+    We don't need cudaDeviceSynchronize() here because all the kernels launched by the same stream are executed sequentially.
+    */
 
     int k = 0;
     if (max_iter == -1)
@@ -149,7 +181,7 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
     for (; k < max_iter; ++k)
     {
         // temp = A*p
-        matrix_vector<<<matrix_grid_size, matrix_block_size>>>(A, p, temp, m_n);
+        matrix_vector<<<matrix_grid_size, matrix_block_size, shared_mem>>>(A, p, temp, m_n);
 
         // alpha = rsold / (p^T temp)
         cublasDdot(handle, m_n, p, 1, temp, 1, scalar_temp);
@@ -166,7 +198,8 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
 
         // check convergence
         cudaMemcpy(&r_norm, rsnew, sizeof(double), cudaMemcpyDeviceToHost);
-        if (DEBUG)
+
+        if (DEBUG && k % 100 == 0)
         {
             std::cout << "\t[STEP " << k << "] residual = " << std::scientific
                       << std::sqrt(r_norm) << "\r" << std::endl;
@@ -186,7 +219,9 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
     if (DEBUG)
     {
         std::cout << "Converged in " << k << " iterations. Residual " << std::scientific << std::sqrt(r_norm) << std::endl;
+        std::cout << "norm double sqrt =" << std::sqrt(std::sqrt(r_norm)) << std::endl;
     }
+    cudaDeviceSynchronize();
     cublasDestroy(handle);
 
     cudaFree(r);

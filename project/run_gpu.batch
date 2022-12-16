@@ -1,13 +1,14 @@
 #!/bin/bash -l
 
 #SBATCH --nodes=1
-#SBATCH --time=0:20:00
+#SBATCH --time=0:02:00
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
-#SBATCH --qos=gpu_free
-#SBATCH --account=math-454
-#nope SBATCH --reservation=Course-math-454
+#SBATCH --account=sds 
 
+#nope SBATCH --reservation=Course-math-454
+#nope SBATCH --account=math-454
+#nope SBATCH --qos=gpu_free
 
 module purge
 module load gcc openblas cuda

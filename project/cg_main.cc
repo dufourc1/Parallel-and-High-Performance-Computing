@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 
   CGSolver CGSolver;
   CGSolver.read_matrix(argv[1]);
-  // CGSolver.generate_lap1d_matrix(64);
+  // CGSolver.generate_lap1d_matrix(1024);
 
   int n = CGSolver.n();
   CGSolver.set_max_iter(n);

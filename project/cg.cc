@@ -5,9 +5,13 @@
 #include <cmath>
 #include <iostream>
 #include <cuda_runtime.h>
+#include <chrono>
 
 const double NEARZERO = 1.0e-14;
-const bool DEBUG = false;
+const bool DEBUG = true;
+using clk = std::chrono::high_resolution_clock;
+using second = std::chrono::duration<double>;
+using time_point = std::chrono::time_point<clk>;
 
 /*
     CGSolver solves the linear equation A*x = b where A is
@@ -48,16 +52,23 @@ void CGSolver::solve(std::vector<double> &x)
   cudaMalloc((void **)&x_device, m_n * sizeof(double));
 
   // copy data from host to device
+  auto t1 = clk::now();
   cudaMemcpy(A_device, m_A.data(), m_m * m_n * sizeof(double), cudaMemcpyHostToDevice);
   cudaMemcpy(b_device, m_b.data(), m_m * sizeof(double), cudaMemcpyHostToDevice);
   cudaMemcpy(x_device, x.data(), m_n * sizeof(double), cudaMemcpyHostToDevice);
+  cudaDeviceSynchronize();
+  second elapsed = clk::now() - t1;
+  std::cout << "Time for allocating memory = " << elapsed.count() << " [s]\n";
 
   solve_CUDA(A_device, b_device, x_device);
 
   cudaDeviceSynchronize();
 
   // retrieve the solution from device to host
+  auto t2 = clk::now();
   cudaMemcpy(x.data(), x_device, m_n * sizeof(double), cudaMemcpyDeviceToHost);
+  second elapsed2 = clk::now() - t2;
+  std::cout << "Time for retrieving solution = " << elapsed2.count() << " [s]\n";
 
   if (DEBUG)
   {
