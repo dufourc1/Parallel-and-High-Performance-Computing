@@ -152,26 +152,30 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
 
     int rows_per_block = 32;
     int threads_per_line = 32;
-    int shared_mem = rows_per_block * threads_per_line * sizeof(double);
 
+    // shared memory for matrix vector multiplication
+    int shared_mem = rows_per_block * threads_per_line * sizeof(double);
     dim3 matrix_block_size(rows_per_block, threads_per_line);
     // one row is assigned to one block (not more) →  only a one dimensional grid
     dim3 matrix_grid_size((m_n + matrix_block_size.x - 1) / matrix_block_size.x);
 
-    // 1 thread per index
-    dim3 vector_block_size((m_m + 31) / 32);
+    // 1 thread per row for vector operations
+    dim3 vector_block_size(threads_per_line);
     dim3 vector_grid_size((m_n + vector_block_size.x - 1) / vector_block_size.x);
 
-    // r = b - A*x
+    // temp = A*x
     matrix_vector<<<matrix_grid_size, matrix_block_size, shared_mem>>>(A, x, temp, m_n);
+    // r = b - A*x
     diff_vector<<<vector_grid_size, vector_block_size>>>(b, temp, r, m_n);
+    cublasDdot(handle, m_n, r, 1, r, 1, rsold);
+
+    // p = r
     copy_vector<<<vector_grid_size, vector_block_size>>>(r, p, m_n);
 
-    cublasDdot(handle, m_n, p, 1, p, 1, rsold);
-
     /*
-    We don't need cudaDeviceSynchronize() here because all the kernels launched by the same stream are executed sequentially.
-    */
+   We don't need cudaDeviceSynchronize() here because all the kernels launched by the same stream are executed sequentially.
+   cudaMemcpy() is a blocking call, so we don't need to synchronize either.
+   */
 
     int k = 0;
     if (max_iter == -1)
@@ -183,8 +187,9 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
         // temp = A*p
         matrix_vector<<<matrix_grid_size, matrix_block_size, shared_mem>>>(A, p, temp, m_n);
 
-        // alpha = rsold / (p^T temp)
+        // scalar_temp = p^T temp
         cublasDdot(handle, m_n, p, 1, temp, 1, scalar_temp);
+        // alpha = rsold / scalar_temp
         div_scalar<<<1, 1>>>(rsold, scalar_temp, alpha);
 
         // x = x + alpha*p
@@ -197,15 +202,18 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
         cublasDdot(handle, m_n, r, 1, r, 1, rsnew);
 
         // check convergence
+        // copy rsnew to host to do the check
         cudaMemcpy(&r_norm, rsnew, sizeof(double), cudaMemcpyDeviceToHost);
-
         if (DEBUG && k % 100 == 0)
         {
             std::cout << "\t[STEP " << k << "] residual = " << std::scientific
                       << std::sqrt(r_norm) << "\r" << std::endl;
         }
+
         if (std::sqrt(r_norm) < m_tolerance)
+        {
             break;
+        }
 
         // beta = rsnew / rsold
         div_scalar<<<1, 1>>>(rsnew, rsold, beta);
@@ -218,10 +226,10 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
     }
     if (DEBUG)
     {
-        std::cout << "Converged in " << k << " iterations. Residual " << std::scientific << std::sqrt(r_norm) << std::endl;
-        std::cout << "norm double sqrt =" << std::sqrt(std::sqrt(r_norm)) << std::endl;
+        std::cout << "Converged in " << k << " iterations. ||r|| = " << std::scientific << std::sqrt(r_norm) << std::endl;
     }
-    cudaDeviceSynchronize();
+
+    // free device memory
     cublasDestroy(handle);
 
     cudaFree(r);

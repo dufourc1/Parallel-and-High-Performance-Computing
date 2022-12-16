@@ -77,12 +77,13 @@ void CGSolver::solve(std::vector<double> &x)
     cblas_dgemv(CblasRowMajor, CblasNoTrans, m_m, m_n, 1., m_A.data(), m_n,
                 x.data(), 1, 0., r.data(), 1);
     cblas_daxpy(m_n, -1., m_b.data(), 1, r.data(), 1);
-    auto rnorm = std::sqrt(cblas_ddot(m_n, r.data(), 1, r.data(), 1));
-    auto res = rnorm / std::sqrt(cblas_ddot(m_n, m_b.data(), 1, m_b.data(), 1));
-    auto nx = std::sqrt(cblas_ddot(m_n, x.data(), 1, x.data(), 1));
+    auto rnorm = cblas_ddot(m_n, r.data(), 1, r.data(), 1);
+    std::cout << "Residual norm squared = " << rnorm << std::endl;
+    auto res = rnorm / cblas_ddot(m_n, m_b.data(), 1, m_b.data(), 1);
+    auto nx = cblas_ddot(m_n, x.data(), 1, x.data(), 1);
     std::cout << "residual = " << std::scientific
-              << rnorm << ", ||x|| = " << nx
-              << ", ||Ax - b||/||b|| = " << res << std::endl;
+              << std::sqrt(rnorm) << ", ||x|| = " << std::sqrt(nx)
+              << ", ||Ax - b||/||b|| = " << std::sqrt(res) << std::endl;
   }
 
   // free device memory
