@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   }
   else if (argc == 3)
   {
-    int n = floor(sqrt(size) * atoi(argv[2]));
+    int n = atoi(argv[2]); // floor(sqrt(size) * atoi(argv[2]));
     solver.split_work(n);
     solver.generate_lap1d_matrix(n);
     max_iter = std::min(max_iter, n);
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
   {
     if (rank == 0)
     {
-      std::cerr << "Usage: " << argv[0] << " [martix-market-filename] or [matrix-number-rows]"
+      std::cerr << "Usage: " << argv[0] << " [martix-market-filename] or [matrix-number-rows] | [N]"
                 << std::endl;
     }
     return 1;
