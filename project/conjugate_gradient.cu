@@ -7,6 +7,21 @@
 
 const double NEARZERO = 1.0e-14;
 const bool DEBUG = false;
+const bool DEBUG_Indices = false;
+const bool VERBOSE = false;
+
+__global__ void check_indices(double *A, double *x, double *output, int n)
+{
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int tid = threadIdx.x + blockDim.x * threadIdx.y;
+    int blockId = blockIdx.x + blockIdx.y * gridDim.x;
+    int threadId = blockId * (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x) + threadIdx.x;
+    if (blockIdx.y < 2)
+    {
+        printf("thread_index (%d,%d), block index (%d,%d) -> row: %d, tid: %d, global index: %d\n", threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y,
+               row, tid, threadId);
+    }
+}
 
 // ouput = A*x
 // only work for one dimensional grid: each row is processed by one block at most
@@ -14,13 +29,22 @@ __global__ void matrix_vector(double *A, double *x, double *output, int n)
 {
     // stupid implementation where each thread computes one element of the output
     extern __shared__ double row_sums[];
-    int row = blockIdx.x * blockDim.x + threadIdx.x;
-    int tid = threadIdx.x * blockDim.y + threadIdx.y;
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int tid = threadIdx.x + blockDim.x * threadIdx.y;
+
     if (row < n)
     {
+        /*
+        // load x into shared memory
+        if (threadIdx.y == 0)
+        {
+            x_[row] = x[row];
+        }
+        __syncthreads();
+        */
         double sum = 0;
         // blockIdx.y should be 1 for this kernel to work
-        for (int j = threadIdx.y; j < n; j += blockDim.y)
+        for (int j = threadIdx.x; j < n; j += blockDim.x)
         {
             sum += A[row * n + j] * x[j];
         }
@@ -30,11 +54,12 @@ __global__ void matrix_vector(double *A, double *x, double *output, int n)
 
         // wait for all threads in the block to finish and then aggregate the results
         __syncthreads();
+
         // jmp >>= 1 is equivalent to jmp /= 2
-        for (int jmp = blockDim.y / 2; jmp > 0; jmp >>= 1)
+        for (int jmp = blockDim.x / 2; jmp > 0; jmp >>= 1)
         {
             // first iteration, each thread in the first half of the block adds the result of the second half to its result
-            if (threadIdx.y < jmp)
+            if (threadIdx.x < jmp)
             {
                 row_sums[tid] += row_sums[tid + jmp];
             }
@@ -42,7 +67,7 @@ __global__ void matrix_vector(double *A, double *x, double *output, int n)
         }
 
         // first thread in the row writes the result to global memory since it aggregated all the results
-        if (threadIdx.y == 0)
+        if (threadIdx.x == 0)
         {
             output[row] = row_sums[tid];
         }
@@ -152,13 +177,25 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
 
     // shared memory for matrix vector multiplication
     int shared_mem = rows_per_block * threads_per_row * sizeof(double);
-    dim3 matrix_block_size(rows_per_block, threads_per_row);
+    dim3 matrix_block_size(threads_per_row, rows_per_block);
     // one row is assigned to one block (not more) →  only a one dimensional grid
-    dim3 matrix_grid_size((m_n + matrix_block_size.x - 1) / matrix_block_size.x);
+    dim3 matrix_grid_size(1, (m_n + matrix_block_size.y - 1) / matrix_block_size.y);
 
     // 1 thread per row for vector operations
-    dim3 vector_block_size(threads_per_row);
+    // old -> dim3 vector_block_size(threads_per_row);
+    dim3 vector_block_size(1024);
     dim3 vector_grid_size((m_n + vector_block_size.x - 1) / vector_block_size.x);
+
+    if (DEBUG and VERBOSE)
+    {
+        std::cout << "matrix_block_size: " << matrix_block_size.x << " " << matrix_block_size.y << std::endl;
+        std::cout << "matrix_grid_size: " << matrix_grid_size.x << " " << matrix_grid_size.y << std::endl;
+    }
+
+    if (DEBUG_Indices)
+    {
+        check_indices<<<matrix_grid_size, matrix_block_size>>>(A, p, temp, m_n);
+    }
 
     // temp = A*x
     matrix_vector<<<matrix_grid_size, matrix_block_size, shared_mem>>>(A, x, temp, m_n);
@@ -201,7 +238,8 @@ void CGSolver::solve_CUDA(double *A, double *b, double *x)
         // check convergence
         // copy rsnew to host to do the check
         cudaMemcpy(&r_norm, rsnew, sizeof(double), cudaMemcpyDeviceToHost);
-        if (DEBUG && k % 100 == 0)
+
+        if (DEBUG && k % 100 == 0 && VERBOSE)
         {
             std::cout << "\t[STEP " << k << "] residual = " << std::scientific
                       << std::sqrt(r_norm) << "\r" << std::endl;

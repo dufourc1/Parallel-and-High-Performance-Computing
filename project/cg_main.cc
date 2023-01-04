@@ -6,6 +6,7 @@ using clk = std::chrono::high_resolution_clock;
 using second = std::chrono::duration<double>;
 using time_point = std::chrono::time_point<clk>;
 
+const bool OUTPUT = true;
 /*
 Implementation of a simple CG CGSolver using matrix in the mtx format (Matrix
 market) Any matrix in that format can be used to test the code
@@ -67,7 +68,14 @@ int main(int argc, char **argv)
   auto t1 = clk::now();
   CGSolver.solve(x_d);
   second elapsed = clk::now() - t1;
-  std::cout << elapsed.count() << "," << n << "," << rows_per_block << "," << threads_per_row << "," << max_iter << std::endl;
 
+  if (OUTPUT)
+  {
+    std::cout << elapsed.count() << "," << n << "," << rows_per_block << "," << threads_per_row << "," << max_iter << std::endl;
+  }
+  else
+  {
+    std::cout << "Elapsed time: " << elapsed.count() << "s" << std::endl;
+  }
   return 0;
 }

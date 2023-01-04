@@ -1,0 +1,15 @@
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --time=0:30:00
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --reservation=Course-math-454-final
+#SBATCH --account=math-454
+#SBATCH --qos=gpu_free
+
+module purge
+module load gcc openblas cuda
+
+# ./cgsolver martix-market-filename] | optional:  [rows_per_block] [threads_per_line] [max_iter] [N]
+srun nvprof ./cgsolver lap2D_5pt_n100.mtx 1 1024

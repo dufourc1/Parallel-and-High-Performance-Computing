@@ -27,6 +27,20 @@
         "cstdio": "cpp",
         "cstdlib": "cpp",
         "exception": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "array": "cpp",
+        "cstdarg": "cpp",
+        "ctime": "cpp",
+        "cwctype": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "fstream": "cpp",
+        "numeric": "cpp",
+        "ratio": "cpp",
+        "sstream": "cpp",
+        "stdexcept": "cpp",
+        "streambuf": "cpp",
+        "tuple": "cpp",
+        "typeinfo": "cpp"
     }
 }

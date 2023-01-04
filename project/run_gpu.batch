@@ -4,26 +4,27 @@
 #SBATCH --time=0:30:00
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
-#SBATCH --account=sds 
-
-#nope SBATCH --reservation=Course-math-454
-#nope SBATCH --account=math-454
-#nope SBATCH --qos=gpu_free
+#SBATCH --reservation=Course-math-454-final
+#SBATCH --account=math-454
+#SBATCH --qos=gpu_free
 
 module purge
 module load gcc openblas cuda
 
-filename=gpu_original_mat.txt
-echo "time_allocation,time_retrieve,time_total,n,rows_per_block,threads_per_line, max_iter" >> $filename
+filename=gpu.txt
+#rm $filename
+#echo "time_allocation,time_retrieve,time_total,n,rows_per_block,threads_per_line, max_iter" >> $filename
 
-for repeat in {1..5}; do 
+for repeat in {1..2}; do 
     echo "repeat $repeat"
+    for N in 5000 10000 20000; do
         for threads_per_row in 1 2 4 8 16 32 64 128 256 512 1024; do  
             for rows_per_block in 1 2 4 8 16 32 64 128 256 512 1024; do
                 if ((threads_per_row * rows_per_block <= 1024)) ; then
-                    echo "N=$N, threads_per_row=$threads_per_row, rows_per_block=$rows_per_block"
-                    srun ./cgsolver lap2D_5pt_n100.mtx $rows_per_block $threads_per_row 500 >> $filename
+                    echo "N= $N, threads_per_row=$threads_per_row, rows_per_block=$rows_per_block"
+                    srun ./cgsolver lap2D_5pt_n100.mtx $rows_per_block $threads_per_row 500 $N>> $filename
                 fi
             done 
         done 
+    done
 done 

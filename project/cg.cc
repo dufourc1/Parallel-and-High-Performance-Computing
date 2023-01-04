@@ -9,6 +9,7 @@
 
 const double NEARZERO = 1.0e-14;
 const bool DEBUG = false;
+
 using clk = std::chrono::high_resolution_clock;
 using second = std::chrono::duration<double>;
 using time_point = std::chrono::time_point<clk>;
