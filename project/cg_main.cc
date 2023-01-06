@@ -53,7 +53,7 @@ int main(int argc, char **argv)
   {
     if (rank == 0)
     {
-      std::cerr << "Usage: " << argv[0] << " [martix-market-filename] or [matrix-number-rows] | [N]"
+      std::cerr << "Usage: " << argv[0] << " [martix-market-filename] | [matrix-number-rows]"
                 << std::endl;
     }
     return 1;

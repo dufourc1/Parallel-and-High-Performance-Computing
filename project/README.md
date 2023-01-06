@@ -1,6 +1,6 @@
 PHPC - CONJUGATE GRADIENT PROJECT
 
-HOWTO COMPILE AND RUN
+HOW TO COMPILE AND RUN
 =====================
 
 Requirements : 
@@ -29,3 +29,11 @@ The given example is a 5-points stencil for the 2D Laplace problem. The matrix i
 
 The matrix format is [Matrix Market format (.mtx extension)](https://sparse.tamu.edu/). You can use other matrices there or create your own. 
 
+MODIFICATION IN RUN CALL
+========================
+
+```
+Usage: ./cgsolver [martix-market-filename] | [matrix-number-rows]
+```
+
+where matrix-number-rows is the size of the matrix (square matrix) that will be generated as a tridiagonal matrix. Adding this value will run the CGSOLVER on the newly generated matrix and discard the matrix-market-filename. Otherwise, the CGSOLVER will run on the matrix-market-filename.
