@@ -1,6 +1,6 @@
 PHPC - CONJUGATE GRADIENT PROJECT
 
-HOWTO COMPILE AND RUN
+HOW TO COMPILE AND RUN
 =====================
 
 Requirements : 
@@ -11,7 +11,7 @@ Requirements :
 compile on SCITAS clusters :
 
 ```
-$ module load gcc openblas
+$ module load gcc openblas cuda
 $ make
 ```
 
@@ -29,3 +29,14 @@ The given example is a 5-points stencil for the 2D Laplace problem. The matrix i
 
 The matrix format is [Matrix Market format (.mtx extension)](https://sparse.tamu.edu/). You can use other matrices there or create your own. 
 
+USAGE MODIFICATIONS
+===================
+
+```
+./cgsolver  [martix-market-filename] | optional:  [rows_per_block] [threads_per_line] [max_iter] [N]
+```
+
+- `rows_per_block` : number of rows per block (default 32)
+- `threads_per_line` : number of threads per line (default 32)
+- `max_iter` : maximum number of iterations (default to the number of rows in the matrix if not specified)
+- `N` : number of rows for tridiagonal laplacian (if specified, the CGsolver will run on the generated matrix and not on the one in the file)
