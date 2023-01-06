@@ -6,7 +6,7 @@
 #include <cblas.h>
 
 const double NEARZERO = 1.0e-14;
-const bool DEBUG = false;
+const bool DEBUG = true;
 const bool DEBUG_Indices = false;
 const bool VERBOSE = false;
 
@@ -34,14 +34,7 @@ __global__ void matrix_vector(double *A, double *x, double *output, int n)
 
     if (row < n)
     {
-        /*
-        // load x into shared memory
-        if (threadIdx.y == 0)
-        {
-            x_[row] = x[row];
-        }
-        __syncthreads();
-        */
+
         double sum = 0;
         // blockIdx.y should be 1 for this kernel to work
         for (int j = threadIdx.x; j < n; j += blockDim.x)

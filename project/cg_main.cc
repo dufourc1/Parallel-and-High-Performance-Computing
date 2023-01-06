@@ -6,7 +6,7 @@ using clk = std::chrono::high_resolution_clock;
 using second = std::chrono::duration<double>;
 using time_point = std::chrono::time_point<clk>;
 
-const bool OUTPUT = true;
+const bool OUTPUT = false;
 /*
 Implementation of a simple CG CGSolver using matrix in the mtx format (Matrix
 market) Any matrix in that format can be used to test the code

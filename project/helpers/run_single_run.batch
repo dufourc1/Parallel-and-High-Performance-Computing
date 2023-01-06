@@ -12,4 +12,4 @@ module purge
 module load gcc openblas cuda
 
 # ./cgsolver martix-market-filename] | optional:  [rows_per_block] [threads_per_line] [max_iter] [N]
-srun nvprof ./cgsolver lap2D_5pt_n100.mtx 1 1024
+srun  ./cgsolver lap2D_5pt_n100.mtx 1 1024
