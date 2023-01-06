@@ -11,7 +11,7 @@ Requirements :
 compile on SCITAS clusters :
 
 ```
-$ module load gcc openblas
+$ module load gcc openblas mvapich2
 $ make
 ```
 
