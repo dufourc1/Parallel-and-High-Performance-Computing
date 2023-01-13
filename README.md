@@ -1,4 +1,4 @@
-# Parallel and High Performance Computing class
+# Projects for the Parallel and High Performance Computing class
 
 - First graded homework: poisson problem with MPI.
 - Second graded homework: poisson problem with CUDA.
